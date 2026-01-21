@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>工位地图 - 实时监控</title>
+    <style>
+        body { margin: 0; background: #f4f4f4; overflow: hidden; font-family: sans-serif; }
+        #map-container { position: relative; display: inline-block; }
+        #floor-map { display: block; max-width: 100%; height: auto; }
+        
+        .seat-indicator {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .seat-indicator:hover { transform: translate(-50%, -50%) scale(1.5); z-index: 10; }
+        
+        .status-free { background-color: #28a745; } /* 绿色-空闲 */
+        .status-busy { background-color: #dc3545; } /* 红色-占用 */
+        .status-unknown { background-color: #6c757d; } /* 灰色-未知 */
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map-container">
+        <!-- 这里的图片路径和 JSON 数据在实际部署时应动态加载 -->
+        <img id="floor-map" src="/static/maps/floor1.png">
+        <div id="indicators-layer"></div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        // 1. 加载坐标数据 (这里假设有一个 floor1_coords.json)
+        // 实际场景中，您可以将此 JSON 内容直接渲染到模板里，或者 fetch 加载
+        let seatCoords = []; 
+        
+        // 模拟加载坐标 (请使用编辑器生成后替换这里)
+        // seatCoords = [ {id: "A-100", x: 20.5, y: 30.1}, ... ];
+        
+        async function loadData() {
+            try {
+                // 加载坐标配置
+                const coordsRes = await fetch('/static/maps/floor1_coords.json');
+                seatCoords = await coordsRes.json();
+                
+                // 加载实时状态
+                const statusRes = await fetch('/api/mappings');
+                const statusData = await statusRes.json();
+                
+                // 转换为 Map 方便查找
+                const statusMap = new Map();
+                statusData.forEach(item => {
+                    // 判断是否在线
+                    let isOnline = false;
+                    if (item.last_user && item.last_user.is_active) {
+                        isOnline = true;
+                    }
+                    statusMap.set(item.seat_id, {
+                        online: isOnline,
+                        user: item.last_user ? item.last_user.user_name : null,
+                        last_seen: item.last_user ? item.last_user.last_seen : null
+                    });
+                });
+
+                renderMap(seatCoords, statusMap);
+                
+            } catch (e) {
+                console.error("加载数据失败:", e);
+                // alert("请确保 /static/maps/floor1_coords.json 存在");
+            }
+        }
+
+        function renderMap(coords, statusMap) {
+            const layer = document.getElementById('indicators-layer');
+            layer.innerHTML = '';
+            
+            coords.forEach(pt => {
+                const el = document.createElement('div');
+                el.className = 'seat-indicator';
+                el.style.left = pt.x + '%';
+                el.style.top = pt.y + '%';
+                
+                // 确定状态
+                const info = statusMap.get(pt.id);
+                if (info) {
+                    if (info.online) {
+                        el.classList.add('status-busy');
+                    } else {
+                        el.classList.add('status-free'); // 有绑定但离线 -> 空闲
+                    }
+                } else {
+                    el.classList.add('status-unknown'); // 没绑定过 -> 未知/空
+                }
+                
+                // 交互
+                el.addEventListener('mouseenter', (e) => showTooltip(e, pt.id, info));
+                el.addEventListener('mouseleave', hideTooltip);
+                
+                layer.appendChild(el);
+            });
+        }
+
+        const tooltip = document.getElementById('tooltip');
+        function showTooltip(e, id, info) {
+            let text = `<b>${id}</b><br>`;
+            if (info) {
+                text += info.online ? "🔴 使用中" : "🟢 空闲";
+                if (info.user) text += `<br>用户: ${info.user}`;
+                if (info.last_seen) text += `<br>最后活跃: ${info.last_seen}`;
+            } else {
+                text += "⚪️ 未配置";
+            }
+            tooltip.innerHTML = text;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        // 启动
+        loadData();
+        // 每 10 秒刷新一次状态
+        setInterval(loadData, 10000);
+
+    </script>
+</body>
+</html>

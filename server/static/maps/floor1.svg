@@ -1,0 +1,36 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景：地板 -->
+    <rect width="800" height="600" fill="#f0f2f5" />
+    
+    <!-- 墙体结构 -->
+    <path d="M50,50 L750,50 L750,550 L50,550 Z" fill="none" stroke="#ccc" stroke-width="4"/>
+    
+    <!-- 装饰：会议室 -->
+    <rect x="600" y="50" width="150" height="200" fill="#e2e8f0" stroke="#94a3b8" />
+    <text x="675" y="150" font-family="Arial" font-size="14" text-anchor="middle" fill="#64748b">会议室</text>
+
+    <!-- 工位区域 A -->
+    <g id="seat-A-100" class="seat" data-id="A-100" transform="translate(100, 100)">
+        <rect width="60" height="40" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+        <path d="M10,40 L10,55 Q30,60 50,55 L50,40" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+        <text x="30" y="25" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">A-100</text>
+    </g>
+
+    <g id="seat-A-101" class="seat" data-id="A-101" transform="translate(180, 100)">
+        <rect width="60" height="40" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+        <path d="M10,40 L10,55 Q30,60 50,55 L50,40" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+        <text x="30" y="25" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">A-101</text>
+    </g>
+
+    <g id="seat-A-102" class="seat" data-id="A-102" transform="translate(260, 100)">
+        <rect width="60" height="40" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+        <path d="M10,40 L10,55 Q30,60 50,55 L50,40" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+        <text x="30" y="25" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">A-102</text>
+    </g>
+
+    <!-- 工位区域 B -->
+    <g id="seat-B-001" class="seat" data-id="B-001" transform="translate(100, 250)">
+        <rect width="60" height="40" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+        <text x="30" y="25" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">B-001</text>
+    </g>
+</svg>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>工位地图坐标编辑器</title>
+    <style>
+        body { display: flex; height: 100vh; margin: 0; font-family: sans-serif; }
+        #sidebar { width: 300px; padding: 20px; background: #f0f0f0; border-right: 1px solid #ccc; overflow-y: auto; }
+        #canvas-container { flex: 1; position: relative; overflow: auto; background: #333; }
+        #map-image { display: block; cursor: crosshair; }
+        .marker { position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        .coord-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .btn { padding: 5px 10px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        .btn-danger { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>工位编辑器</h3>
+        <p>1. 将楼层平面图放入 server/static/maps/floor1.png</p>
+        <p>2. 点击图片位置，输入工位号</p>
+        <hr>
+        <button class="btn" onclick="exportJSON()">导出 JSON</button>
+        <hr>
+        <div id="coords-list"></div>
+    </div>
+    <div id="canvas-container">
+        <!-- 默认加载 static/maps/floor1.png，请确保图片存在 -->
+        <img id="map-image" src="/static/maps/floor1.png" alt="请将图片命名为 floor1.png 放入 static/maps 目录">
+    </div>
+
+    <script>
+        const image = document.getElementById('map-image');
+        const list = document.getElementById('coords-list');
+        const container = document.getElementById('canvas-container');
+        let points = [];
+
+        image.addEventListener('click', function(e) {
+            // 获取相对于图片的坐标
+            const rect = image.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 计算百分比坐标 (适应响应式缩放)
+            const x_pct = (x / rect.width * 100).toFixed(2);
+            const y_pct = (y / rect.height * 100).toFixed(2);
+
+            const seatId = prompt("请输入此位置的工位号 (如 A-101):");
+            if (seatId) {
+                addPoint(seatId, x_pct, y_pct);
+            }
+        });
+
+        function addPoint(id, x, y) {
+            points.push({id, x, y});
+            renderList();
+            renderMarker(x, y);
+        }
+
+        function renderMarker(x, y) {
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            marker.style.left = x + '%';
+            marker.style.top = y + '%';
+            container.appendChild(marker);
+        }
+
+        function renderList() {
+            list.innerHTML = '';
+            points.forEach((p, index) => {
+                const div = document.createElement('div');
+                div.className = 'coord-item';
+                div.innerHTML = `
+                    <span><b>${p.id}</b> <small>(${p.x}%, ${p.y}%)</small></span>
+                    <button class="btn btn-danger btn-sm" onclick="removePoint(${index})">X</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function removePoint(index) {
+            points.splice(index, 1);
+            // 重新渲染所有标记太麻烦，这里简单刷新页面或清空DOM
+            // 实际应用需完善。现在仅重绘列表。
+            renderList();
+            alert("已删除数据，请手动刷新页面重绘标记(简化版编辑器)");
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(points, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "floor1_coords.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+    </script>
+</body>
+</html>
